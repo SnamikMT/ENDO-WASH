@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Medical Landing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light only" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Manrope: жирные заголовки и кнопки; Inter: тексты. Оба с кириллицей -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="preconnect" href="https://images.unsplash.com" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header-bar
+    phone="+7 (812) 123-45-67"
+    phonehref="+78121234567"
+    email="info@aude.ru">
+  </header-bar>
+
+  <main>
+    <!-- id="home" нужен для якоря “Главная” -->
+    <hero-section id="home" img="images/hero.png"></hero-section>
+    <benefits-section id="benefits"></benefits-section>
+    <modes-section id="modes" interval="1200"></modes-section>
+    <specs-section id="specs"></specs-section>
+    <exchange-section
+      id="exchange"
+      img="images/hero.png"
+      amount="500 000 ₽"
+      title="Получите новую моечно‑дезинфицирующую установку ПРОФИ‑АУДЭ"
+      subtitle="в обмен на вашу моечную машину с выгодой до 500 000 руб.">
+    </exchange-section>
+    <qa-form
+      id="qa"
+      email="info@aude.ru"
+      title="Ответим на ваши вопросы"
+      subtitle="Получите консультацию по дезинфекции гибких эндоскопов с помощью автоматической установки ПРОФИ‑АУДЭ">
+    </qa-form>
+    <contacts-section id="contacts"></contacts-section>
+
+    <site-footer
+      brand="ENDO and WASH"
+      logo="images/logo.png"
+      phone="+7 (812) 123-45-67"
+      phonehref="+78121234567"
+      email="info@aude.ru"
+      address="Санкт‑Петербург, ул. Примерная, 1"
+    ></site-footer>
+
+  </main>
+
+  <!-- Компоненты -->
+  <script type="module" src="js/components/header-bar.js"></script>
+  <script type="module" src="js/components/hero-section.js"></script>
+  <script type="module" src="js/components/benefits-section.js"></script>
+  <script type="module" src="js/components/modes-section.js"></script>
+  <script type="module" src="js/components/specs-section.js"></script>
+  <script type="module" src="js/components/exchange-section.js"></script>
+  <script type="module" src="js/components/qa-form.js"></script>
+  <script type="module" src="js/components/contacts-section.js"></script>
+  <script type="module" src="js/components/site-footer.js"></script>
+
+</body>
+</html>
