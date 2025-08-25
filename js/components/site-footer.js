@@ -63,7 +63,7 @@ tpl.innerHTML = `
     .logo{
       display:flex; align-items:center; gap:12px;
     }
-    .logo img{ width:44px; height:44px; object-fit:contain; border-radius:10px; background:#111827 }
+    .logo img{ width:140px; object-fit:contain; border-radius:10px; background:#111827 }
     .logo .name{ font-weight:900; font-family:"Manrope","Inter",system-ui; font-size:1.2rem; letter-spacing:.3px }
     .desc{ color:var(--muted); line-height:1.6 }
     .badges{ display:flex; gap:8px; flex-wrap:wrap }
@@ -121,7 +121,7 @@ tpl.innerHTML = `
         <section class="brand">
           <div class="logo">
             <img data-logo alt="">
-            <div class="name" data-brand>ENDO and WASH</div>
+
           </div>
           <p class="desc">Качественная дезинфекция эндоскопов. Автоматические установки, режимы ДВУ, документация циклов и сервисная поддержка.</p>
           <div class="badges">
