@@ -1,10 +1,10 @@
 // js/components/qa-form.js
 // <qa-form
-//   email="info@aude.ru"                 // адрес для mailto (если нет action)
-//   phone="+7 (812) 123-45-67"           // отобразим слева
-//   phonehref="+78121234567"             // tel: ссылка
-//   action="/form-handler"               // если задано — обычный submit на сервер
-//   method="POST"                        // метод submit (по умолчанию POST)
+//   email="info@aude.ru"
+//   phone="+7 (812) 123-45-67"
+//   phonehref="+78121234567"
+//   bot-token="8008327245:AAECnxOeBHe5MoblkEA72UXH2cA--DOejWo"
+//   chat-id="ВАШ_CHAT_ID"
 //   title="Ответим на ваши вопросы"
 //   subtitle="Получите консультацию по дезинфекции гибких эндоскопов…"
 // ></qa-form>
@@ -103,10 +103,20 @@ tpl.innerHTML = `
       transition:.2s transform,.2s box-shadow;
     }
     .btn:hover{ transform: translateY(-1px); box-shadow:0 16px 36px rgba(37,99,235,.38) }
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none !important;
+    }
 
-    .msg{ display:none; padding:12px 14px; border-radius:12px; font-weight:700 }
-    .msg.ok{ display:block; background:#ecfdf5; color:#14532d; border:1px solid #bbf7d0 }
-    .msg.err{ display:block; background:#fef2f2; color:#991b1b; border:1px solid #fecaca }
+    .msg{ 
+      padding:12px 14px; 
+      border-radius:12px; 
+      font-weight:700;
+      display: none;
+    }
+    .msg.ok{ background:#ecfdf5; color:#14532d; border:1px solid #bbf7d0 }
+    .msg.err{ background:#fef2f2; color:#991b1b; border:1px solid #fecaca }
 
     .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden }
     .mono{ font-variant-numeric: tabular-nums; }
@@ -152,13 +162,13 @@ tpl.innerHTML = `
 
             <div class="row">
               <div>
-                <label for="name">Ваше имя</label>
+                <label for="name">Ваше имя *</label>
                 <div class="control">
                   <input id="name" name="name" type="text" placeholder="Иван Петров" autocomplete="name" required>
                 </div>
               </div>
               <div>
-                <label for="phone">Ваш телефон</label>
+                <label for="phone">Ваш телефон *</label>
                 <div class="control">
                   <input id="phone" name="phone" type="tel" class="mono" placeholder="+7 (___) ___‑__‑__" autocomplete="tel" required>
                 </div>
@@ -166,7 +176,7 @@ tpl.innerHTML = `
             </div>
 
             <div>
-              <label for="email">Ваш email</label>
+              <label for="email">Ваш email *</label>
               <div class="control">
                 <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
               </div>
@@ -183,7 +193,6 @@ tpl.innerHTML = `
   </section>
 `
 
-// js/components/qa-form.js
 class QAForm extends HTMLElement{
   constructor(){ 
     super(); 
@@ -191,7 +200,7 @@ class QAForm extends HTMLElement{
   }
   
   static get observedAttributes(){ 
-    return ['email','phone','phonehref','action','method','title','subtitle','bot-token','chat-id'] 
+    return ['email','phone','phonehref','title','subtitle','bot-token','chat-id'] 
   }
   
   connectedCallback(){ 
@@ -222,11 +231,11 @@ class QAForm extends HTMLElement{
   _bind(){
     const form  = this.$('form')
     const okMsg = this.$('[data-ok]')
-    const erMsg = this.$('[data-err]')
+    const errMsg = this.$('[data-err]')
     const phone = this.$('#phone')
     const submitBtn = this.$('button[type="submit"]')
 
-    // мягкая маска телефона
+    // Мягкая маска телефона
     phone.addEventListener('input', (e)=>{
       const d = e.target.value.replace(/\D/g,'').replace(/^8/, '7')
       let v = '+7 '
@@ -237,38 +246,26 @@ class QAForm extends HTMLElement{
       e.target.value = v
     }, { passive:true })
 
+    // Отправка формы
     form.addEventListener('submit', async (ev)=>{
       ev.preventDefault()
-      okMsg.style.display = 'none'
-      erMsg.style.display = 'none'
-      
-      // Показываем loading state
-      const originalText = submitBtn.textContent
-      submitBtn.textContent = 'Отправка...'
-      submitBtn.disabled = true
+      this._hideMessages()
 
-      if (form.elements['_gotcha'].value) { 
-        submitBtn.textContent = originalText
-        submitBtn.disabled = false
-        return 
-      }
+      if (form.elements['_gotcha'].value) return
 
       const name  = this.$('#name')
       const tel   = this.$('#phone')
       const email = this.$('#email')
       const question = this.$('#q')
 
-      const valid = name.value.trim().length >= 2 &&
-                    /\d/.test(tel.value) &&
-                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())
-
-      if (!valid){
-        erMsg.textContent = 'Пожалуйста, корректно заполните все обязательные поля.'
-        erMsg.style.display = 'block'
-        submitBtn.textContent = originalText
-        submitBtn.disabled = false
+      // Валидация
+      if (!this._validateForm(name, tel, email)) {
+        this._showError('Пожалуйста, корректно заполните все обязательные поля.')
         return
       }
+
+      // Показываем загрузку
+      this._setLoading(true, submitBtn)
 
       try {
         // Пробуем отправить через Telegram
@@ -281,36 +278,40 @@ class QAForm extends HTMLElement{
         })
 
         if (success) {
-          okMsg.style.display = 'block'
+          this._showSuccess()
           form.reset()
-          // Прокручиваем к сообщению об успехе
-          okMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
         } else {
-          throw new Error('Не удалось отправить через Telegram')
+          // Fallback на mailto
+          this._sendViaMailto({
+            name: name.value.trim(),
+            phone: tel.value,
+            email: email.value.trim(),
+            question: question.value.trim()
+          })
+          this._showSuccess()
+          form.reset()
         }
       } catch (error) {
-        // Fallback на mailto
-        this._sendViaMailto({
-          name: name.value.trim(),
-          phone: tel.value,
-          email: email.value.trim(),
-          question: question.value.trim()
-        })
-        okMsg.style.display = 'block'
-        form.reset()
+        this._showError('Ошибка отправки. Попробуйте позже.')
       } finally {
-        submitBtn.textContent = originalText
-        submitBtn.disabled = false
+        this._setLoading(false, submitBtn)
       }
     })
   }
 
+  _validateForm(name, tel, email) {
+    return name.value.trim().length >= 2 &&
+           /\d/.test(tel.value) &&
+           /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())
+  }
+
   async _sendToTelegram(formData) {
-    const botToken = this.getAttribute('bot-token') || 'YOUR_BOT_TOKEN';
-    const chatId = this.getAttribute('chat-id') || 'YOUR_CHAT_ID';
-    
-    // Если токен и chatId не настроены, пропускаем Telegram
-    if (botToken === 'YOUR_BOT_TOKEN' || chatId === 'YOUR_CHAT_ID') {
+    const botToken = this.getAttribute('bot-token') || '8008327245:AAECnxOeBHe5MoblkEA72UXH2cA--DOejWo';
+    const chatId = this.getAttribute('chat-id');
+
+    // Если chat-id не указан, используем fallback
+    if (!chatId || chatId === 'ВАШ_CHAT_ID') {
+      console.warn('Chat ID не настроен. Используется fallback на mailto.');
       return false;
     }
 
@@ -342,7 +343,7 @@ class QAForm extends HTMLElement{
 
       return response.ok;
     } catch (error) {
-      console.error('Telegram error:', error);
+      console.error('Ошибка отправки в Telegram:', error);
       return false;
     }
   }
@@ -363,6 +364,34 @@ Email: ${formData.email}
     `.trim());
 
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  }
+
+  _setLoading(loading, button) {
+    if (loading) {
+      button.disabled = true;
+      button.textContent = 'Отправка...';
+    } else {
+      button.disabled = false;
+      button.textContent = 'Задать вопрос';
+    }
+  }
+
+  _showSuccess() {
+    this._hideMessages();
+    this.$('[data-ok]').style.display = 'block';
+    this.$('[data-ok]').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  _showError(message) {
+    this._hideMessages();
+    const errElement = this.$('[data-err]');
+    errElement.textContent = message;
+    errElement.style.display = 'block';
+  }
+
+  _hideMessages() {
+    this.$('[data-ok]').style.display = 'none';
+    this.$('[data-err]').style.display = 'none';
   }
 }
 
