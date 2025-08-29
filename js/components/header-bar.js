@@ -144,7 +144,7 @@ tpl.innerHTML = `
 
         <div class="contacts">
           <a class="phone" data-phone href="#">+7 (812) 123-45-67</a>
-          <button class="btn" type="button" data-callback>Заказать звонок</button>
+          <button class="btn" type="button" data-callback>Оставить заявку</button>
           <a class="email" data-email href="#">info@aude.ru</a>
         </div>
       </div>
@@ -214,10 +214,21 @@ class HeaderBar extends HTMLElement{
       })
     })
 
+    // === ПРОСТОЙ МЕТОД: Прямой доступ к модалке ===
     this.shadowRoot.querySelector('[data-callback]').addEventListener('click', ()=> {
-      this.dispatchEvent(new CustomEvent('open-callback', {bubbles:true}))
-      // TODO: заменить на открытие твоего модального окна
-      alert('Откроем модалку «Заказать звонок».')
+      // Ищем модальное окно в основном DOM
+      const modal = document.querySelector('modal-form');
+      if (modal) {
+        // Настраиваем заголовок для контекста "звонка"
+        modal.setAttribute('form-title', 'Заказать звонок');
+        // Убираем атрибут product-name, если он был установлен ранее
+        modal.removeAttribute('product-name');
+        // Открываем модалку
+        modal.open();
+      } else {
+        // Fallback на случай, если модалка не найдена
+        console.warn('Модальное окно не найдено на странице');
+      }
     })
 
     // тень при скролле

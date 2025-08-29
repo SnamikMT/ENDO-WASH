@@ -199,7 +199,11 @@ class HeroSection extends HTMLElement{
   static get observedAttributes(){ 
     return ['img','badge','title','subtitle','lead','cta-text','cta-href'] 
   }
-  connectedCallback(){ this._apply() }
+  connectedCallback(){ 
+    this._apply();
+    // Добавляем обработчик скролла после применения атрибутов
+    this._addScrollListener();
+  }
   attributeChangedCallback(){ this._apply() }
 
   _apply(){
@@ -211,12 +215,28 @@ class HeroSection extends HTMLElement{
     if (this.hasAttribute('lead'))      $('[data-lead]').textContent = this.getAttribute('lead')
 
     const cta = $('[data-cta]')
+    // Меняем стандартный текст кнопки на нужный клиенту
     if (this.hasAttribute('cta-text'))  cta.textContent = this.getAttribute('cta-text').toUpperCase()
+    else cta.textContent = 'ОСТАВИТЬ ЗАЯВКУ'; // Значение по умолчанию
     if (this.hasAttribute('cta-href'))  cta.setAttribute('href', this.getAttribute('cta-href'))
 
     const imgEl = $('[data-image]')
     const src = this.getAttribute('img') || 'images/hero.png'
     this._setImg(imgEl, src)
+  }
+
+  _addScrollListener() {
+    const ctaButton = this.shadowRoot.querySelector('[data-cta]');
+    // Если у кнопки стоит href="#consult", отменяем стандартное поведение и скроллим
+    if (ctaButton && ctaButton.getAttribute('href') === '#consult') {
+      ctaButton.addEventListener('click', (e) => {
+        e.preventDefault(); // Предотвращаем переход по ссылке
+        const targetSection = document.getElementById('qa'); // Ищем секцию с формой по id
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
   }
 
   _setImg(imgEl, src){

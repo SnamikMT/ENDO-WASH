@@ -22,7 +22,7 @@
 
   <main>
     <!-- id="home" нужен для якоря “Главная” -->
-    <hero-section id="home" img="images/hero.png"></hero-section>
+    <hero-section id="home" img="images/hero.png" cta-href="#consult"></hero-section>
     <benefits-section id="benefits"></benefits-section>
     <modes-section id="modes" interval="1200"></modes-section>
     <specs-section id="specs"></specs-section>
@@ -34,11 +34,14 @@
       subtitle="в обмен на вашу моечную машину с выгодой до 500 000 руб.">
     </exchange-section>
     <qa-form
-      id="qa"
       email="info@aude.ru"
+      phone="+7 (812) 123-45-67"
+      phonehref="+78121234567"
       title="Ответим на ваши вопросы"
-      subtitle="Получите консультацию по дезинфекции гибких эндоскопов с помощью автоматической установки ПРОФИ‑АУДЭ">
-    </qa-form>
+      subtitle="Получите консультацию по дезинфекции гибких эндоскопов…"
+      bot-token="1234567890:AAFgG12345abcdefghijk-67890"
+      chat-id="123456789"
+    ></qa-form>
     <contacts-section id="contacts"></contacts-section>
 
     <site-footer
@@ -49,6 +52,15 @@
       email="info@aude.ru"
       address="Санкт‑Петербург, ул. Примерная, 1"
     ></site-footer>
+
+    <!-- Модальное окно (изначально скрыто) -->
+    <modal-form 
+      id="main-modal" 
+      email="info@aude.ru"
+      form-title="Оставить заявку"
+      bot-token="8008327245:AAECnxOeBHe5MoblkEA72UXH2cA--DOejWo"
+      chat-id="841975941"
+    ></modal-form>
 
   </main>
 
@@ -62,6 +74,7 @@
   <script type="module" src="js/components/qa-form.js"></script>
   <script type="module" src="js/components/contacts-section.js"></script>
   <script type="module" src="js/components/site-footer.js"></script>
+  <script type="module" src="js/components/modal-form.js"></script>
 
 </body>
 </html>

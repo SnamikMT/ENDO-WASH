@@ -183,10 +183,22 @@ tpl.innerHTML = `
   </section>
 `
 
+// js/components/qa-form.js
 class QAForm extends HTMLElement{
-  constructor(){ super(); this.attachShadow({mode:'open'}).appendChild(tpl.content.cloneNode(true)) }
-  static get observedAttributes(){ return ['email','phone','phonehref','action','method','title','subtitle'] }
-  connectedCallback(){ this._apply(); this._bind(); }
+  constructor(){ 
+    super(); 
+    this.attachShadow({mode:'open'}).appendChild(tpl.content.cloneNode(true)) 
+  }
+  
+  static get observedAttributes(){ 
+    return ['email','phone','phonehref','action','method','title','subtitle','bot-token','chat-id'] 
+  }
+  
+  connectedCallback(){ 
+    this._apply(); 
+    this._bind(); 
+  }
+  
   attributeChangedCallback(){ this._apply(); }
 
   $(s){ return this.shadowRoot.querySelector(s) }
@@ -212,6 +224,7 @@ class QAForm extends HTMLElement{
     const okMsg = this.$('[data-ok]')
     const erMsg = this.$('[data-err]')
     const phone = this.$('#phone')
+    const submitBtn = this.$('button[type="submit"]')
 
     // мягкая маска телефона
     phone.addEventListener('input', (e)=>{
@@ -224,44 +237,133 @@ class QAForm extends HTMLElement{
       e.target.value = v
     }, { passive:true })
 
-    form.addEventListener('submit', (ev)=>{
+    form.addEventListener('submit', async (ev)=>{
+      ev.preventDefault()
       okMsg.style.display = 'none'
       erMsg.style.display = 'none'
-      if (form.elements['_gotcha'].value) { ev.preventDefault(); return } // honeypot
+      
+      // Показываем loading state
+      const originalText = submitBtn.textContent
+      submitBtn.textContent = 'Отправка...'
+      submitBtn.disabled = true
+
+      if (form.elements['_gotcha'].value) { 
+        submitBtn.textContent = originalText
+        submitBtn.disabled = false
+        return 
+      }
 
       const name  = this.$('#name')
       const tel   = this.$('#phone')
       const email = this.$('#email')
+      const question = this.$('#q')
 
       const valid = name.value.trim().length >= 2 &&
                     /\d/.test(tel.value) &&
                     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())
 
       if (!valid){
-        ev.preventDefault()
-        erMsg.textContent = 'Проверьте имя, телефон и email.'
+        erMsg.textContent = 'Пожалуйста, корректно заполните все обязательные поля.'
         erMsg.style.display = 'block'
+        submitBtn.textContent = originalText
+        submitBtn.disabled = false
         return
       }
 
-      // Если нет action — mailto
-      if (!this.hasAttribute('action')){
-        ev.preventDefault()
-        const to = this.getAttribute('email') || 'info@aude.ru'
-        const subj = encodeURIComponent('Вопрос с сайта — ПРОФИ‑АУДЭ')
-        const body = encodeURIComponent(
-          `Вопрос: ${this.$('#q').value || '(не указан)'}\n\n` +
-          `Имя: ${name.value}\n` +
-          `Телефон: ${tel.value}\n` +
-          `Email: ${email.value}\n`
-        )
-        window.location.href = `mailto:${to}?subject=${subj}&body=${body}`
+      try {
+        // Пробуем отправить через Telegram
+        const success = await this._sendToTelegram({
+          name: name.value.trim(),
+          phone: tel.value,
+          email: email.value.trim(),
+          question: question.value.trim(),
+          formType: 'Вопрос с сайта'
+        })
+
+        if (success) {
+          okMsg.style.display = 'block'
+          form.reset()
+          // Прокручиваем к сообщению об успехе
+          okMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        } else {
+          throw new Error('Не удалось отправить через Telegram')
+        }
+      } catch (error) {
+        // Fallback на mailto
+        this._sendViaMailto({
+          name: name.value.trim(),
+          phone: tel.value,
+          email: email.value.trim(),
+          question: question.value.trim()
+        })
         okMsg.style.display = 'block'
-      } else {
-        // серверный режим
-        if (!this.hasAttribute('method')) form.setAttribute('method','POST')
+        form.reset()
+      } finally {
+        submitBtn.textContent = originalText
+        submitBtn.disabled = false
       }
     })
   }
+
+  async _sendToTelegram(formData) {
+    const botToken = this.getAttribute('bot-token') || 'YOUR_BOT_TOKEN';
+    const chatId = this.getAttribute('chat-id') || 'YOUR_CHAT_ID';
+    
+    // Если токен и chatId не настроены, пропускаем Telegram
+    if (botToken === 'YOUR_BOT_TOKEN' || chatId === 'YOUR_CHAT_ID') {
+      return false;
+    }
+
+    const message = `
+📋 *Новый вопрос с сайта*
+
+*Тип:* ${formData.formType}
+*Имя:* ${formData.name}
+*Телефон:* ${formData.phone}
+*Email:* ${formData.email}
+*Вопрос:* ${formData.question || 'Не указан'}
+
+*Время:* ${new Date().toLocaleString('ru-RU')}
+*Страница:* ${window.location.href}
+    `.trim();
+
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Telegram error:', error);
+      return false;
+    }
+  }
+
+  _sendViaMailto(formData) {
+    const to = this.getAttribute('email') || 'info@aude.ru';
+    const subject = encodeURIComponent('Вопрос с сайта — ПРОФИ‑АУДЭ');
+    const body = encodeURIComponent(`
+Вопрос: ${formData.question || '(не указан)'}
+
+Контактные данные:
+Имя: ${formData.name}
+Телефон: ${formData.phone}
+Email: ${formData.email}
+
+Время отправки: ${new Date().toLocaleString('ru-RU')}
+Страница: ${window.location.href}
+    `.trim());
+
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  }
 }
+
 customElements.define('qa-form', QAForm)

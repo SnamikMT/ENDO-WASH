@@ -233,12 +233,12 @@ tpl.innerHTML = `
 
           <!-- CTA -->
           <div class="cta">
-            <a class="btn" href="#tradein-form">Заявка на обмен</a>
+            <a class="btn" type="button" data-callback>Заявка на обмен</a>
           </div>
         </div>
 
         <!-- Правый столбец -->
-        <div class="photo">
+        <div class="photo">а
           <img data-img alt="ПРОФИ-АУДЭ — моечно-дезинфицирующая установка" />
           <div class="save">
             <small>Выгода до</small>
@@ -252,9 +252,19 @@ tpl.innerHTML = `
 `
 
 class ExchangeSection extends HTMLElement{
-  constructor(){ super(); this.attachShadow({mode:'open'}).appendChild(tpl.content.cloneNode(true)) }
+  
+  constructor(){ 
+    super(); 
+    this.attachShadow({mode:'open'}).appendChild(tpl.content.cloneNode(true)) 
+  }
+  
   static get observedAttributes(){ return ['img','amount','title','subtitle'] }
-  connectedCallback(){ this._apply() }
+  
+  connectedCallback(){ 
+    this._apply();
+    this._addModalListener();
+  }
+  
   attributeChangedCallback(){ this._apply() }
 
   _apply(){
@@ -269,5 +279,46 @@ class ExchangeSection extends HTMLElement{
     imgEl.loading = 'lazy'
     imgEl.decoding = 'async'
   }
+
+  // НОВЫЙ МЕТОД: Добавляем обработчик для модалки
+  _addModalListener() {
+    const callbackButton = this.shadowRoot.querySelector('[data-callback]');
+    if (callbackButton) {
+      callbackButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        this._openExchangeModal();
+      });
+    }
+  }
+
+  // НОВЫЙ МЕТОД: Открываем модалку для обмена
+  _openExchangeModal() {
+    // Ждем немного чтобы все компоненты успели загрузиться
+    setTimeout(() => {
+      // Пробуем разные способы найти модалку
+      let modal = document.querySelector('modal-form');
+      
+      // Если не нашли по тегу, ищем по ID
+      if (!modal) {
+        modal = document.getElementById('main-modal');
+      }
+      
+      if (modal && typeof modal.open === 'function') {
+        // Устанавливаем контекстные атрибуты для обмена
+        modal.setAttribute('form-title', 'Заявка на обмен');
+        modal.setAttribute('product-name', 'Программа trade-in');
+        
+        modal.open();
+      } else {
+        console.warn('Модальное окно не найдено');
+        // Fallback: скроллим к форме внизу
+        const formSection = document.getElementById('qa');
+        if (formSection) {
+          formSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }, 100);
+  }
 }
+
 customElements.define('exchange-section', ExchangeSection)
