@@ -220,7 +220,7 @@ class HeaderBar extends HTMLElement{
       const modal = document.querySelector('modal-form');
       if (modal) {
         // Настраиваем заголовок для контекста "звонка"
-        modal.setAttribute('form-title', 'Заказать звонок');
+        modal.setAttribute('form-title', 'Оставить заявку');
         // Убираем атрибут product-name, если он был установлен ранее
         modal.removeAttribute('product-name');
         // Открываем модалку

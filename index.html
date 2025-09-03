@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <title>Medical Landing</title>
+  <title>Качественная дезинфекция эндоскопов</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light only" />
   <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
@@ -13,6 +13,8 @@
 
   <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 </head>
 <body>
   <header-bar
@@ -23,7 +25,12 @@
 
   <main>
     <!-- id="home" нужен для якоря “Главная” -->
-    <hero-section id="home" img="images/hero.png" cta-href="#consult"></hero-section>
+    <hero-section
+      id="home"
+      img="images/hero.png"
+      cta-text="Оставить заявку"
+      cta-modal="main-modal"
+    ></hero-section>
     <benefits-section id="benefits"></benefits-section>
     <modes-section id="modes" interval="1200"></modes-section>
     <specs-section id="specs"></specs-section>
@@ -34,16 +41,21 @@
       title="Получите новую моечно‑дезинфицирующую установку ПРОФИ‑АУДЭ"
       subtitle="в обмен на вашу моечную машину с выгодой до 500 000 руб.">
     </exchange-section>
+
+    <contacts-section id="contacts"></contacts-section>
+
     <qa-form
       email="info@aude.ru"
       phone="+7 (812) 123-45-67"
       phonehref="+78121234567"
       bot-token="8008327245:AAECnxOeBHe5MoblkEA72UXH2cA--DOejWo"
-      chat-id="841975941"
+      chat-id="322236923"
       title="Ответим на ваши вопросы"
       subtitle="Получите консультацию по дезинфекции гибких эндоскопов…"
+      emailjs-service="service_4wth1v9"
+      emailjs-template="template_40br0pg"
+      emailjs-user="ynMd9OGQ-HX7ed6Tu"
     ></qa-form>
-    <contacts-section id="contacts"></contacts-section>
 
     <site-footer
       brand="ENDO and WASH"
@@ -55,13 +67,18 @@
     ></site-footer>
 
     <!-- Модальное окно (изначально скрыто) -->
-    <modal-form 
-      id="main-modal" 
+
+    <modal-form
+      id="main-modal"
       email="info@aude.ru"
       form-title="Оставить заявку"
       bot-token="8008327245:AAECnxOeBHe5MoblkEA72UXH2cA--DOejWo"
-      chat-id="841975941"
+      chat-id="322236923"
+      emailjs-service="service_4wth1v9"
+      emailjs-template="template_40br0pg"
+      emailjs-user="ynMd9OGQ-HX7ed6Tu"
     ></modal-form>
+
 
   </main>
 
